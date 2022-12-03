@@ -19,10 +19,13 @@ for rucksack in input.split('\n'):
 print(total_priority)
 
 
-rucksacks = [rucksack for rucksack in input.split('\n') if rucksack]
+rucksacks = input.split('\n')
 total_priority = 0
 for i in range(0, len(rucksacks), 3):
-    priority = ord((set(rucksacks[i]) & set(rucksacks[i + 1]) & set(rucksacks[i + 2])).pop()) - 96
+    try:
+        priority = ord((set(rucksacks[i]) & set(rucksacks[i + 1]) & set(rucksacks[i + 2])).pop()) - 96
+    except IndexError:
+        break
     if priority < 0:
         priority += 58
     total_priority += priority
