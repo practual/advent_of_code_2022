@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+from itertools import permutations
 
 with open('input') as f:
     input = f.read()
@@ -50,21 +51,41 @@ def get_distance(a, b):
 max_rate = 0
 
 
-def test_valve_permutations(rate, steps, room, valves_done):
+def get_contribution_to_rate(current_room, valve_room, current_steps, steps):
+    distance = get_distance(current_room, valve_room)
+    steps_to_turn_on = current_steps + distance + 1
+    return rates[valve_room] * (steps - steps_to_turn_on), steps_to_turn_on
+
+
+def test_valve_permutations(rate, explorers, valves_done, max_steps):
     global max_rate
     remaining_valves = valve_rooms - valves_done
-    for valve in remaining_valves:
-        distance = get_distance(room, valve)
-        steps_to_turn_on = steps + distance + 1
-        if steps_to_turn_on > 30:
-            continue
-        new_rate = rate + rates[valve] * (30 - steps_to_turn_on)
-        max_rate = max(max_rate, new_rate)
+    num_explorers = len(explorers)
+    for valves in permutations(remaining_valves, num_explorers):
+        next_explorers = []
+        new_rate = rate
         valves_copy = valves_done.copy()
-        valves_copy.add(valve)
-        test_valve_permutations(new_rate, steps_to_turn_on, valve, valves_copy)
+        for i, explorer in enumerate(explorers):
+            steps, room = explorer
+            valve = valves[i]
+            rate_addition, new_steps = get_contribution_to_rate(room, valve, steps, max_steps)
+            if new_steps <= max_steps:
+                new_rate += rate_addition
+                if new_rate > max_rate:
+                    max_rate = new_rate
+                    print('new max rate', new_rate)
+                valves_copy.add(valve)
+                # Will need at least two more steps to do anything useful (move and turn on valve)
+                if new_steps <= max_steps - 2:
+                    next_explorers.append([new_steps, valve])
+        if next_explorers:
+            test_valve_permutations(new_rate, next_explorers, valves_copy, max_steps)
 
 
-test_valve_permutations(0, 0, 'AA', set())
+test_valve_permutations(0, [[0, 'AA']], set(), 30)
+print(max_rate)
+
+max_rate = 0
+test_valve_permutations(0, [[0, 'AA'], [0, 'AA']], set(), 26)
 print(max_rate)
 
